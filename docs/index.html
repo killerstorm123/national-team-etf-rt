@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>国家队 ETF 分钟成交额 · 实时</title>
+<style>
+  :root{
+    --ink:#1a3c6e; --ink2:#33507a; --bg:#fafafa; --card:#fff; --line:#e5e7eb;
+    --muted:#777; --warn:#b8860b; --bad:#c0392b; --good:#1f8a70;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:#222;
+    font:14px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:26px 18px 40px}
+  .hero{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+  h1{margin:0;font-size:23px;letter-spacing:.3px;color:var(--ink)}
+  .sub{margin:6px 0 0;color:var(--muted);font-size:13px}
+  .status{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px}
+  .badge{padding:3px 9px;border-radius:99px;background:#eef2f8;color:var(--ink2);
+    border:1px solid #dfe6f1;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .badge.ok{background:#eaf6f1;border-color:#cfe9df;color:var(--good)}
+  .badge.warn{background:#fdf6e5;border-color:#f0e2bf;color:var(--warn)}
+  .badge.bad{background:#fdeeee;border-color:#f3d0cc;color:var(--bad)}
+  .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0 10px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .kpi label{display:block;color:var(--muted);font-size:12px}
+  .kpi b{display:block;font-size:34px;line-height:1.15;margin:4px 0 2px;
+    color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+  .kpi small{color:#999;font-size:12px;font-variant-numeric:tabular-nums}
+  .alerts{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 14px}
+  .alert{padding:7px 12px;border-radius:8px;background:#fffaf0;border:1px solid #f0e2bf;
+    color:#7a5c12;font-size:12.5px;cursor:pointer}
+  .alert:hover{border-color:#d8bd7a}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 16px 12px;margin-bottom:16px}
+  .panel-h{display:flex;gap:12px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;margin-bottom:6px}
+  .panel h2{margin:0;font-size:15px;color:var(--ink)}
+  .panel .hint{color:var(--muted);font-size:12px;margin-top:2px}
+  .toggles{display:flex;gap:14px;flex-wrap:wrap}
+  .seg{display:flex;border:1px solid #dfe6f1;border-radius:8px;overflow:hidden}
+  .seg button{border:0;background:#fff;color:var(--ink2);padding:5px 10px;font-size:12px;cursor:pointer}
+  .seg button+button{border-left:1px solid #dfe6f1}
+  .seg button.on{background:var(--ink);color:#fff}
+  .chart{width:100%;height:420px}
+  .chart.short{height:320px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .foot{color:#8a8a8a;font-size:11.5px;line-height:1.6;margin-top:4px;font-variant-numeric:tabular-nums}
+  .notes{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 20px}
+  .notes h3{margin:0 0 8px;font-size:14px;color:var(--ink)}
+  .notes ul{margin:0;padding-left:18px;color:#555;font-size:12.5px;line-height:1.75}
+  .notes b{color:#333}
+  footer{margin-top:22px;color:#aaa;font-size:11.5px;text-align:center}
+  @media(max-width:860px){
+    .kpis{grid-template-columns:1fr}
+    .grid2{grid-template-columns:1fr}
+    .chart{height:340px}
+  }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="hero">
+    <div>
+      <h1>国家队 ETF 分钟成交额 · 实时</h1>
+      <p class="sub">7 族 33 只宽基 ETF 盘中分钟量能 · 柱高即放量 · 60 秒自刷</p>
+    </div>
+    <div class="status">
+      <span class="badge" id="badgePhase">--</span>
+      <span class="badge" id="badgeSource">--</span>
+      <span class="badge" id="badgeOnline">--</span>
+      <span class="badge" id="badgeClock">--</span>
+    </div>
+  </header>
+
+  <section class="kpis">
+    <div class="kpi">
+      <label>33 只今日合计（亿 · 09:31 起）</label>
+      <b id="kpiTotal">--</b>
+      <small id="kpiTotalSub">--</small>
+    </div>
+    <div class="kpi">
+      <label>最新分钟额（亿）</label>
+      <b id="kpiLast">--</b>
+      <small id="kpiLastSub">--</small>
+    </div>
+    <div class="kpi">
+      <label>今日峰值分钟（亿）</label>
+      <b id="kpiPeak">--</b>
+      <small id="kpiPeakSub">--</small>
+    </div>
+  </section>
+
+  <div class="alerts" id="alerts"></div>
+
+  <section class="panel">
+    <div class="panel-h">
+      <div>
+        <h2>分钟成交额 × 上证指数分时</h2>
+        <div class="hint" id="mainHint">柱 = 33 只当分钟合计（亿元）· 线 = 上证指数（右轴，昨收居中）</div>
+      </div>
+      <div class="toggles">
+        <div class="seg" id="segView">
+          <button data-view="today" class="on">今日</button>
+          <button data-view="d3">近3日</button>
+          <button data-view="d5">近5日</button>
+          <button data-view="d10">近10日</button>
+          <button data-view="d15">近15日</button>
+        </div>
+        <div class="seg" id="segMode">
+          <button data-mode="total" class="on">合计</button>
+          <button data-mode="family">分族堆叠</button>
+        </div>
+      </div>
+    </div>
+    <div id="chartMain" class="chart"></div>
+    <div class="foot" id="mainFoot"></div>
+  </section>
+
+  <section class="grid2">
+    <div class="panel">
+      <div class="panel-h">
+        <div>
+          <h2>今日 · 谁在放量（族结构）</h2>
+          <div class="hint">每分钟 7 族成交额占比 100% 堆叠 · 占比抬升 = 该族相对发力</div>
+        </div>
+      </div>
+      <div id="chartShare" class="chart short"></div>
+      <div class="foot" id="shareFoot"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-h">
+        <div>
+          <h2>今天什么成色 · 日内累计</h2>
+          <div class="hint">粗蓝 = 今日累计 · 橙 = 昨日 · 灰 = 近 15 日 · 蓝带 = 前 5 日均值 ±1σ</div>
+        </div>
+      </div>
+      <div id="chartCum" class="chart short"></div>
+      <div class="foot" id="cumFoot"></div>
+    </div>
+  </section>
+
+  <section class="notes">
+    <h3>口径说明</h3>
+    <ul>
+      <li><b>监控池</b>：7 族 33 只宽基 ETF（沪深300×5、上证50×3、中证500×5、中证1000×4、中证A500×6、科创50×5、创业板×5），清单见 <code>config/pool.json</code>。</li>
+      <li><b>口径</b>：每根柱 = 该分钟 33 只 ETF 成交额（东财 push2his 分钟 K 当分钟值）加总；09:31 首根含集合竞价（与腾讯备源已做差分对齐）。族结构可看是哪一族在放量。</li>
+      <li><b>放量判断</b>：不做买卖方向判定——柱高对比即放量强度；圆圈标注为「前 20 分钟中位数 ×2.5 或 均值+3σ」的超阈值分钟，并给出主导族。</li>
+      <li><b>跨日视图</b>：5 分钟粒度，跨最近 3 / 5 / 10 / 15 个交易日（东财 klt=5 精确额），本地切片零请求；竖虚线 = 天分隔，脚注列每日合计。</li>
+      <li><b>边界</b>：本板只看盘中成交行为（放量 ≈ 异动），成交额无法区分买/卖方向；放量也可能来自量化/散户，不等于国家队进场。</li>
+      <li><b>时效</b>：本地 Python 采集器 60 秒一轮直连公开行情接口（主 = 东财 push2his；失败冷却 5 分钟后自动切腾讯 ifzq 备源），页面每 60 秒拉取最新快照；收盘后自动降频到 5 分钟。</li>
+    </ul>
+  </section>
+
+  <footer>个人研究笔记 · 非投资建议 · 数据源：东财 push2his / 腾讯 ifzq · 采集端 60s · 页面自刷 60s</footer>
+</main>
+<script src="./echarts.min.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>
