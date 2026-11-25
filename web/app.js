@@ -193,6 +193,7 @@
 
   /* ── 图表公共 ── */
   function chartOf(el) {
+    if (!window.echarts) return null;   // echarts 未就绪时跳过图表，KPI/表格照常渲染
     return S.charts[el.id] || (S.charts[el.id] = echarts.init(el, null, { renderer: 'canvas' }));
   }
   function idxAxisRange(preClose, prices) {
@@ -1039,20 +1040,22 @@
     renderTitle();
     renderSeal();
     var main = chartOf($('chartMain'));
+    var cShare = chartOf($('chartShare'));
+    var cCum = chartOf($('chartCum'));
     if (S.view === 'today') {
-      main.setOption(optionMainToday(), true);
-      chartOf($('chartShare')).setOption(S.shareMode === 'share' ? optionShare() : optionExcess(), true);
-      chartOf($('chartCum')).setOption(optionCum(), true);
+      if (main) main.setOption(optionMainToday(), true);
+      if (cShare) cShare.setOption(S.shareMode === 'share' ? optionShare() : optionExcess(), true);
+      if (cCum) cCum.setOption(optionCum(), true);
     } else {
       if (!S.hist) { S.view = 'today'; render(); return; }
       var n = S.view === 'd3' ? 3 : S.view === 'd5' ? 5 : S.view === 'd10' ? 10 : 15;
-      main.setOption(optionMainHist(n), true);
-      chartOf($('chartShare')).clear();
-      chartOf($('chartCum')).clear();
+      if (main) main.setOption(optionMainHist(n), true);
+      if (cShare) cShare.clear();
+      if (cCum) cCum.clear();
     }
     var heat = optionHeat();
     var chHeat = chartOf($('chartHeat'));
-    if (heat) chHeat.setOption(heat, true); else chHeat.clear();
+    if (chHeat) { if (heat) chHeat.setOption(heat, true); else chHeat.clear(); }
     renderEtfTable();
   }
 
@@ -1151,6 +1154,8 @@
     window.addEventListener('resize', function () {
       Object.keys(S.charts).forEach(function (k) { S.charts[k].resize(); });
     });
+    /* echarts 异步就绪后补画图表 */
+    window.addEventListener('echarts-ready', function () { if (S.rt) render(); });
   }
 
   /* ── 初始化 ── */
