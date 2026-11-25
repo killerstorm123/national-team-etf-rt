@@ -23,12 +23,16 @@
   .badge.ok{background:#eaf6f1;border-color:#cfe9df;color:var(--good)}
   .badge.warn{background:#fdf6e5;border-color:#f0e2bf;color:var(--warn)}
   .badge.bad{background:#fdeeee;border-color:#f3d0cc;color:var(--bad)}
-  .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0 10px}
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:20px 0 10px}
   .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
   .kpi label{display:block;color:var(--muted);font-size:12px}
-  .kpi b{display:block;font-size:34px;line-height:1.15;margin:4px 0 2px;
-    color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+  .kpi b{display:block;font-size:26px;line-height:1.2;margin:4px 0 2px;
+    color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.3px;white-space:nowrap}
+  .kpi b.up{color:var(--bad)}
+  .kpi b.down{color:var(--good)}
   .kpi small{color:#999;font-size:12px;font-variant-numeric:tabular-nums}
+  .chk{display:flex;gap:5px;align-items:center;color:var(--ink2);font-size:12px;cursor:pointer;user-select:none}
+  .chk input{accent-color:var(--ink)}
   .alerts{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 14px}
   .alert{padding:7px 12px;border-radius:8px;background:#fffaf0;border:1px solid #f0e2bf;
     color:#7a5c12;font-size:12.5px;cursor:pointer}
@@ -46,13 +50,26 @@
   .chart.short{height:320px}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
   .foot{color:#8a8a8a;font-size:11.5px;line-height:1.6;margin-top:4px;font-variant-numeric:tabular-nums}
+  .etf-table{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+  .etf-table th{color:var(--muted);font-weight:500;text-align:right;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+  .etf-table td{padding:5px 8px;border-bottom:1px solid #f2f4f7;text-align:right;white-space:nowrap}
+  .etf-table th:first-child,.etf-table td:first-child{text-align:left}
+  .etf-table td.name{text-align:left;color:#333}
+  .etf-table tr:hover td{background:#f7f9fc}
+  .famdot{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:0}
+  .chg-up{color:var(--bad)} .chg-down{color:var(--good)}
+  .seal-row{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:#555;padding:5px 0;border-bottom:1px dashed #eef0f3;font-variant-numeric:tabular-nums}
+  .seal-row b{color:var(--ink)}
+  .btn{border:1px solid #dfe6f1;background:#fff;color:var(--ink2);border-radius:8px;
+    padding:5px 12px;font-size:12px;cursor:pointer}
+  .btn:hover{border-color:var(--ink);color:var(--ink)}
   .notes{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 20px}
   .notes h3{margin:0 0 8px;font-size:14px;color:var(--ink)}
   .notes ul{margin:0;padding-left:18px;color:#555;font-size:12.5px;line-height:1.75}
   .notes b{color:#333}
   footer{margin-top:22px;color:#aaa;font-size:11.5px;text-align:center}
   @media(max-width:860px){
-    .kpis{grid-template-columns:1fr}
+    .kpis{grid-template-columns:repeat(2,1fr)}
     .grid2{grid-template-columns:1fr}
     .chart{height:340px}
   }
@@ -89,6 +106,16 @@
       <b id="kpiPeak">--</b>
       <small id="kpiPeakSub">--</small>
     </div>
+    <div class="kpi">
+      <label>今日领投族</label>
+      <b id="kpiFam">--</b>
+      <small id="kpiFamSub">--</small>
+    </div>
+    <div class="kpi">
+      <label>同刻分位（vs 近15日）</label>
+      <b id="kpiP0">--</b>
+      <small id="kpiP0Sub">--</small>
+    </div>
   </section>
 
   <div class="alerts" id="alerts"></div>
@@ -111,6 +138,7 @@
           <button data-mode="total" class="on">合计</button>
           <button data-mode="family">分族堆叠</button>
         </div>
+        <label class="chk"><input type="checkbox" id="chkP90">超P90 标题闪烁</label>
       </div>
     </div>
     <div id="chartMain" class="chart"></div>
@@ -121,8 +149,12 @@
     <div class="panel">
       <div class="panel-h">
         <div>
-          <h2>今日 · 谁在放量（族结构）</h2>
-          <div class="hint">每分钟 7 族成交额占比 100% 堆叠 · 占比抬升 = 该族相对发力</div>
+          <h2>今日 · 族结构</h2>
+          <div class="hint" id="shareHint">每分钟 7 族成交额占比 100% 堆叠 · 占比抬升 = 该族相对发力</div>
+        </div>
+        <div class="seg" id="segShare">
+          <button data-share="share" class="on">占比堆叠</button>
+          <button data-share="excess">族超额线</button>
         </div>
       </div>
       <div id="chartShare" class="chart short"></div>
@@ -140,21 +172,70 @@
     </div>
   </section>
 
+  <section class="panel">
+    <div class="panel-h">
+      <div>
+        <h2>护盘节奏 · 30 分钟槽 × 近15日热力</h2>
+        <div class="hint">每个交易日按 8 个半小时槽聚合 33 只合计额 · 越红 = 该时段越惯常放量 · 今日以亮边框标注</div>
+      </div>
+      <div class="seg" id="segHeat">
+        <button data-heat="pct" class="on">占当日 %</button>
+        <button data-heat="abs">绝对额（亿）</button>
+      </div>
+    </div>
+    <div id="chartHeat" style="width:100%;height:360px"></div>
+    <div class="foot" id="heatFoot"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-h">
+      <div>
+        <h2>单只 ETF · 当日表现</h2>
+        <div class="hint" id="etfHint">按今日成交额降序 · 分时 = 当日分钟收盘价（SVG） · 涨跌 = 开盘至今 · 直连模式可用</div>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="etf-table">
+        <thead>
+          <tr><th>ETF</th><th>族</th><th>成交额（亿）</th><th>占比</th><th>开盘至今</th><th>日内分时</th></tr>
+        </thead>
+        <tbody id="etfBody"></tbody>
+      </table>
+    </div>
+    <div class="foot" id="etfFoot"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-h">
+      <div>
+        <h2>盘后封存 · 日 K 核对</h2>
+        <div class="hint">收盘后把当日分钟合计存入本地（约 60 日滚动），并与东财日 K 成交额核对（±2% 内为可信）</div>
+      </div>
+      <button class="btn" id="btnSealExport">导出封存 JSON</button>
+    </div>
+    <div id="sealStatus" class="foot">--</div>
+    <div id="sealList" style="margin-top:6px"></div>
+  </section>
+
   <section class="notes">
     <h3>口径说明</h3>
     <ul>
+      <li><b>数据链路</b>：页面在浏览器里<b>直连</b>公开行情接口（主 = 东财 push2his，判死冷却 5 分钟自动切腾讯 ifzq 备源），任何访客打开即实时，无需服务器常驻；本地 Python 采集器写入的 <code>data/*.json</code> 仅作直连不可用时的兜底快照（<code>?src=static</code> 可强制查看）。</li>
       <li><b>监控池</b>：7 族 33 只宽基 ETF（沪深300×5、上证50×3、中证500×5、中证1000×4、中证A500×6、科创50×5、创业板×5），清单见 <code>config/pool.json</code>。</li>
-      <li><b>口径</b>：每根柱 = 该分钟 33 只 ETF 成交额（东财 push2his 分钟 K 当分钟值）加总；09:31 首根含集合竞价（与腾讯备源已做差分对齐）。族结构可看是哪一族在放量。</li>
+      <li><b>口径</b>：每根柱 = 该分钟 33 只 ETF 成交额（东财分钟 K 当分钟值）加总；09:31 首根含集合竞价（腾讯备源已做差分对齐）。蓝带 = 近 15 日<b>同一时刻</b>分钟额的中位–P90 分位带（5 分钟槽 ÷5 折算）。</li>
+      <li><b>同刻分位</b>：最新分钟额在近 15 日同槽分布中的分位——≥P90 标红（显著放量）、≤P10 标青（显著缩量），比只看绝对额更公平。</li>
+      <li><b>族超额线</b>：各族今日累计 − 近 15 日同槽中位累计（槽内线性插值），正值 = 相对历史更发力，负值 = 相对克制。</li>
       <li><b>放量判断</b>：不做买卖方向判定——柱高对比即放量强度；圆圈标注为「前 20 分钟中位数 ×2.5 或 均值+3σ」的超阈值分钟，并给出主导族。</li>
-      <li><b>跨日视图</b>：5 分钟粒度，跨最近 3 / 5 / 10 / 15 个交易日（东财 klt=5 精确额），本地切片零请求；竖虚线 = 天分隔，脚注列每日合计。</li>
+      <li><b>护盘节奏热力</b>：把每个交易日切成 8 个半小时槽，看 15 日来「惯常几点放量」；今日行仅完成部分槽，盘后刷新即完整。</li>
+      <li><b>盘后封存</b>：收盘后自动把当日合计与东财日 K 核对（±2% 内可信），存浏览器本地（约 60 日），可一键导出 JSON。</li>
       <li><b>边界</b>：本板只看盘中成交行为（放量 ≈ 异动），成交额无法区分买/卖方向；放量也可能来自量化/散户，不等于国家队进场。</li>
-      <li><b>时效</b>：本地 Python 采集器 60 秒一轮直连公开行情接口（主 = 东财 push2his；失败冷却 5 分钟后自动切腾讯 ifzq 备源），页面每 60 秒拉取最新快照；收盘后自动降频到 5 分钟。</li>
     </ul>
   </section>
 
-  <footer>个人研究笔记 · 非投资建议 · 数据源：东财 push2his / 腾讯 ifzq · 采集端 60s · 页面自刷 60s</footer>
+  <footer>个人研究笔记 · 非投资建议 · 浏览器直连：东财 push2his / 腾讯 ifzq · 页面自刷 60s（盘后 5 分钟）</footer>
 </main>
 <script src="./echarts.min.js"></script>
+<script src="./live.js"></script>
 <script src="./app.js"></script>
 </body>
 </html>

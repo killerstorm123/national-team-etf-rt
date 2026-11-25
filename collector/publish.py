@@ -26,7 +26,7 @@ WEB = ROOT / "web"
 DATA = ROOT / "data"
 DOCS = ROOT / "docs"
 TZ = ZoneInfo("Asia/Shanghai")
-WEB_FILES = ["index.html", "app.js", "echarts.min.js"]
+WEB_FILES = ["index.html", "app.js", "live.js", "echarts.min.js"]
 DATA_FILES = ["rt.json", "hist.json"]
 
 
