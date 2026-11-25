@@ -13,7 +13,8 @@
       { name: '中证1000', color: '#7e57c2', etfs: ['1.512100', '0.159845', '1.560010', '0.159633'] },
       { name: '中证A500', color: '#5c7099', etfs: ['1.563360', '0.159352', '0.159338', '0.159361', '1.512050', '1.563800'] },
       { name: '科创50', color: '#c0392b', etfs: ['1.588000', '1.588080', '1.588060', '1.588050', '1.588090'] },
-      { name: '创业板', color: '#b8860b', etfs: ['0.159915', '0.159952', '0.159977', '0.159971', '0.159948'] }
+      { name: '创业板', color: '#b8860b', etfs: ['0.159915', '0.159952', '0.159977', '0.159971', '0.159948', '0.159949'] },
+      { name: '上证指数', color: '#2e7d5b', etfs: ['1.510210'] }
     ]
   };
   var ALL_ETFS = [];
@@ -68,6 +69,7 @@
   function phaseNow(day) {
     var m = bjHM();
     if (day && day !== bjDate()) return day < bjDate() ? 'closed' : 'preopen';
+    if (m > '11:35' && m < '12:55') return 'break';   // 午间休市
     if (!((m >= '09:15' && m <= '11:35') || (m >= '12:55' && m <= '15:05'))) {
       return m > '15:05' ? 'closed' : (m < '09:15' ? 'preopen' : 'closed');
     }
@@ -461,8 +463,9 @@
       });
     });
   }
-  function load() {
-    if (state.busy) return state.busy;
+  function load(force) {
+    /* force：无视进行中的旧管线（后台标签页节流会把超时定时器拖到分钟级，回前台必须强制重启） */
+    if (state.busy && !force) return state.busy;
     var nowT = Date.now();
     var full = !state.day
       || (nowT - state.lastFullAt > 15 * 60 * 1000)

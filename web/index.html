@@ -80,7 +80,7 @@
   <header class="hero">
     <div>
       <h1>国家队 ETF 分钟成交额 · 实时</h1>
-      <p class="sub">7 族 33 只宽基 ETF 盘中分钟量能 · 柱高即放量 · 60 秒自刷</p>
+      <p class="sub">8 族 35 只宽基 ETF 盘中分钟量能 · 柱高即放量 · 60 秒自刷</p>
     </div>
     <div class="status">
       <span class="badge" id="badgePhase">--</span>
@@ -92,7 +92,7 @@
 
   <section class="kpis">
     <div class="kpi">
-      <label>33 只今日合计（亿 · 09:31 起）</label>
+      <label>35 只今日合计（亿 · 09:31 起）</label>
       <b id="kpiTotal">--</b>
       <small id="kpiTotalSub">--</small>
     </div>
@@ -124,7 +124,7 @@
     <div class="panel-h">
       <div>
         <h2>分钟成交额 × 上证指数分时</h2>
-        <div class="hint" id="mainHint">柱 = 33 只当分钟合计（亿元）· 线 = 上证指数（右轴，昨收居中）</div>
+        <div class="hint" id="mainHint">柱 = 35 只当分钟合计（亿元）· 线 = 上证指数（右轴，昨收居中）</div>
       </div>
       <div class="toggles">
         <div class="seg" id="segView">
@@ -150,7 +150,7 @@
       <div class="panel-h">
         <div>
           <h2>今日 · 族结构</h2>
-          <div class="hint" id="shareHint">每分钟 7 族成交额占比 100% 堆叠 · 占比抬升 = 该族相对发力</div>
+          <div class="hint" id="shareHint">每分钟 8 族成交额占比 100% 堆叠 · 占比抬升 = 该族相对发力</div>
         </div>
         <div class="seg" id="segShare">
           <button data-share="share" class="on">占比堆叠</button>
@@ -176,7 +176,7 @@
     <div class="panel-h">
       <div>
         <h2>护盘节奏 · 30 分钟槽 × 近15日热力</h2>
-        <div class="hint">每个交易日按 8 个半小时槽聚合 33 只合计额 · 越红 = 该时段越惯常放量 · 今日以亮边框标注</div>
+        <div class="hint">每个交易日按 8 个半小时槽聚合 35 只合计额 · 越红 = 该时段越惯常放量 · 今日以亮边框标注</div>
       </div>
       <div class="seg" id="segHeat">
         <button data-heat="pct" class="on">占当日 %</button>
@@ -221,8 +221,9 @@
     <h3>口径说明</h3>
     <ul>
       <li><b>数据链路</b>：页面在浏览器里<b>直连</b>公开行情接口（主 = 东财 push2his，判死冷却 5 分钟自动切腾讯 ifzq 备源），任何访客打开即实时，无需服务器常驻；本地 Python 采集器写入的 <code>data/*.json</code> 仅作直连不可用时的兜底快照（<code>?src=static</code> 可强制查看）。</li>
-      <li><b>监控池</b>：7 族 33 只宽基 ETF（沪深300×5、上证50×3、中证500×5、中证1000×4、中证A500×6、科创50×5、创业板×5），清单见 <code>config/pool.json</code>。</li>
-      <li><b>口径</b>：每根柱 = 该分钟 33 只 ETF 成交额（东财分钟 K 当分钟值）加总；09:31 首根含集合竞价（腾讯备源已做差分对齐）。蓝带 = 近 15 日<b>同一时刻</b>分钟额的中位–P90 分位带（5 分钟槽 ÷5 折算）。</li>
+      <li><b>监控池</b>：8 族 35 只宽基 ETF（沪深300×5、上证50×3、中证500×5、中证1000×4、中证A500×6、科创50×5、创业板×6、上证指数×1），清单见 <code>config/pool.json</code>。2026-11-25 起对齐金科看板换仓后清单，补入 <code>159949 创业板50ETF华安</code>、<code>510210 上证指数ETF富国</code>。</li>
+      <li><b>口径</b>：每根柱 = 该分钟 35 只 ETF 成交额（东财分钟 K 当分钟值）加总；09:31 首根含集合竞价（腾讯备源已做差分对齐）。蓝带 = 近 15 日<b>同一时刻</b>分钟额的中位–P90 分位带（5 分钟槽 ÷5 折算）。</li>
+      <li><b>后台标签页</b>：浏览器会节流后台页面的定时器，导致后台期间数据停滞；切回前台会立即强制重拉最新数据，无需手动刷新。</li>
       <li><b>同刻分位</b>：最新分钟额在近 15 日同槽分布中的分位——≥P90 标红（显著放量）、≤P10 标青（显著缩量），比只看绝对额更公平。</li>
       <li><b>族超额线</b>：各族今日累计 − 近 15 日同槽中位累计（槽内线性插值），正值 = 相对历史更发力，负值 = 相对克制。</li>
       <li><b>放量判断</b>：不做买卖方向判定——柱高对比即放量强度；圆圈标注为「前 20 分钟中位数 ×2.5 或 均值+3σ」的超阈值分钟，并给出主导族。</li>

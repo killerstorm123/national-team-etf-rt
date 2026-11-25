@@ -218,7 +218,7 @@
     var series = [];
     if (S.mode === 'total') {
       series.push({
-        name: '33只合计', type: 'bar', data: total.map(function (v) { return +v.toFixed(2); }),
+        name: rt.totalEtfs + '只合计', type: 'bar', data: total.map(function (v) { return +v.toFixed(2); }),
         barMaxWidth: 12, itemStyle: { color: INK, borderRadius: [2, 2, 0, 0] }, z: 3
       });
     } else {
@@ -293,7 +293,7 @@
           if (i == null) return key;
           var lines = ['<b>' + key + '</b>'];
           if (S.mode === 'total') {
-            lines.push('33只合计：<b>' + FMT(total[i]) + '</b> 亿');
+            lines.push(rt.totalEtfs + '只合计：<b>' + FMT(total[i]) + '</b> 亿');
           } else {
             rt.groups.forEach(function (g) {
               if (d.fam[g.name][i] > 0) lines.push(g.name + '：' + FMT(d.fam[g.name][i]) + ' 亿');
@@ -813,10 +813,11 @@
       $('badgeClock').className = 'badge warn';
       return;
     }
-    var phase = rt.phase === 'intraday' ? '盘中' : rt.phase === 'preopen' ? '未开盘' : '已收盘';
+    var phase = rt.phase === 'intraday' ? '盘中' : rt.phase === 'preopen' ? '未开盘'
+      : rt.phase === 'break' ? '午间休市' : '已收盘';
     var ph = $('badgePhase');
     ph.textContent = phase + ' · ' + rt.date.slice(5);
-    ph.className = 'badge ' + (rt.phase === 'intraday' ? 'ok' : '');
+    ph.className = 'badge ' + (rt.phase === 'intraday' ? 'ok' : rt.phase === 'break' ? 'warn' : '');
 
     var src = $('badgeSource');
     if (!rt.live) { src.textContent = '静态兜底快照'; src.className = 'badge warn'; }
@@ -901,7 +902,7 @@
   function renderFoots() {
     var rt = S.rt, h = S.hist;
     $('mainHint').textContent = S.view === 'today'
-      ? '柱 = 33 只当分钟合计（亿元）· 蓝带 = 近15日同刻中位–P90 · 线 = 上证指数（右轴，昨收居中）'
+      ? '柱 = ' + rt.totalEtfs + ' 只当分钟合计（亿元）· 蓝带 = 近15日同刻中位–P90 · 线 = 上证指数（右轴，昨收居中）'
       : '5 分钟粒度 · 竖虚线 = 天分隔 · 悬停看当日明细';
 
     if (S.view === 'today') {
@@ -910,8 +911,8 @@
           : rt.source === 'em' ? '东财 push2his（浏览器直连）' : '腾讯 ifzq（直连备源）')
         + ' · 在线 ' + rt.online + '/' + rt.totalEtfs + ' 只';
       if (S.shareMode === 'share') {
-        $('shareHint').textContent = '每分钟 7 族成交额占比 100% 堆叠 · 占比抬升 = 该族相对发力';
-        $('shareFoot').textContent = '占比 = 该分钟族成交额 / 33 只当分钟合计 · 悬停看各族绝对额';
+        $('shareHint').textContent = '每分钟 ' + rt.groups.length + ' 族成交额占比 100% 堆叠 · 占比抬升 = 该族相对发力';
+        $('shareFoot').textContent = '占比 = 该分钟族成交额 / ' + rt.totalEtfs + ' 只当分钟合计 · 悬停看各族绝对额';
       } else {
         var di0 = histDayIdx();
         $('shareHint').textContent = '各族今日累计 − 近15日同刻中位累计 · 零线上方 = 相对历史更发力';
@@ -1086,7 +1087,7 @@
         console.error(err2);
       });
     }
-    return LiveData.load().then(function (res) {
+    return LiveData.load(true).then(function (res) {
       S.rt = res.rt;
       S.error = '';
       S.cd = S.rt.phase === 'intraday' ? 60 : 300;
@@ -1141,7 +1142,11 @@
     $('badgeClock').addEventListener('click', function () { S.cd = 0; load(true); });
 
     document.addEventListener('visibilitychange', function () {
-      if (!document.hidden) { S.cd = Math.min(S.cd, 5); }
+      if (!document.hidden && S.src === 'live') {
+        /* 后台标签页会被浏览器节流拖住管线：回前台立即强制重拉（先占住 cd，防 tick 连发） */
+        S.cd = 60;
+        load(false);
+      }
     });
     window.addEventListener('resize', function () {
       Object.keys(S.charts).forEach(function (k) { S.charts[k].resize(); });
